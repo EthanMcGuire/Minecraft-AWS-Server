@@ -1,7 +1,16 @@
 [Unit]
 Description=Minecraft Service
-After=default.target
+After=network.target
 [Service]
 Type=simple
 User=ec2-user
-ExecStart=/usr/bin/java -server -Xmx4G -Xms2G -jar /minecraft/forge-1.19.3-44.1.0-universal.jar
+Nice=1
+KillMode=none
+SuccessExitStatus=0 1
+ProtectHome=true
+ProtectSystem=full
+PrivateDevices=true
+NoNewPrivileges=true
+WorkingDirectory=/minecraft
+ExecStart=/minecraft/run.sh --nogui
+ExecStop=/usr/bin/pkill -f "java"
