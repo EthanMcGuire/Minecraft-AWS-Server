@@ -17,4 +17,5 @@ sudo aws s3 cp s3://minecraftserverstack-ccfpminecraftserver329202397-120m63ljzb
 sudo aws s3 cp s3://minecraftserverstack-ccfpminecraftserver329202397-120m63ljzb68g/minecraft.service /etc/systemd/system
 sudo chown -R ec2-user:ec2-user /minecraft
 sudo systemctl daemon-reload
+sudo systemctl enable minecraft
 sudo systemctl start minecraft
