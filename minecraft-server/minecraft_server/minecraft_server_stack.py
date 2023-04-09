@@ -81,35 +81,37 @@ class MinecraftServerStack(Stack):
             resources=["*"]
         ))
 
-        ###Creating the EC2 instance
+        # ###Creating the EC2 instance
 
-        #VPC
-        defaultVpc = ec2.Vpc.from_lookup(self, 'CCFP-minecraft-VPC', is_default=True)
+        # #VPC
+        # defaultVpc = ec2.Vpc.from_lookup(self, 'CCFP-minecraft-VPC', is_default=True)
 
-        #Create the security group
-        #A security group acts as a virtual firewall for your instance to control inbound and outbound traffic.
-        securityGroup = ec2.SecurityGroup(self,'CCFP-minecraft-sg', vpc=defaultVpc, allow_all_outbound=True, security_group_name='CCFP-minecraft-sg')
+        # #Create the security group
+        # #A security group acts as a virtual firewall for your instance to control inbound and outbound traffic.
+        # securityGroup = ec2.SecurityGroup(self,'CCFP-minecraft-sg', vpc=defaultVpc, allow_all_outbound=True, security_group_name='CCFP-minecraft-sg')
 
-        #Allow inbound traffic on specific ports
-        securityGroup.add_ingress_rule(ec2.Peer.ipv4(myIp), ec2.Port.tcp(22), description='Allows SSH access for Admin')  #Only allow SSH to myself
-        securityGroup.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(25565), description='Allows minecraft access')
-        securityGroup.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.udp(25565), description='Allows minecraft access')
+        # #Allow inbound traffic on specific ports
+        # securityGroup.add_ingress_rule(ec2.Peer.ipv4(myIp), ec2.Port.tcp(22), description='Allows SSH access for Admin')  #Only allow SSH to myself
+        # securityGroup.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(25565), description='Allows minecraft access')
+        # securityGroup.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.udp(25565), description='Allows minecraft access')
 
-        #User data script
-        with open(USER_DATA_FILE, "r") as f:
-            user_data_script = f.read()
+        # #User data script
+        # with open(USER_DATA_FILE, "r") as f:
+        #     user_data_script = f.read()
 
-        user_data = ec2.UserData.for_linux()
-        user_data.add_commands(user_data_script)
+        # user_data = ec2.UserData.for_linux()
+        # user_data.add_commands(user_data_script)
 
-        #OG EC2
-        #EC2 instance
-        instance = ec2.Instance(self, 'CCFP-minecraft-ec2-instance', vpc= defaultVpc, role=ec2Role, security_group=securityGroup, instance_name='CCFP-minecraft-ec2-instance',\
-                                instance_type=ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM), machine_image=ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX_2),\
-                                key_name= 'CCFP-minecraft-key', user_data=user_data)
+        # #OG EC2
+        # #EC2 instance
+        # instance = ec2.Instance(self, 'CCFP-minecraft-ec2-instance', vpc= defaultVpc, role=ec2Role, security_group=securityGroup, instance_name='CCFP-minecraft-ec2-instance',\
+        #                         instance_type=ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM), machine_image=ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX_2),\
+        #                         key_name= 'CCFP-minecraft-key', user_data=user_data)
 
-        #We want the ip address of this instance
-        output = cdk.CfnOutput(self, 'CCFP-minecraft-output', value=instance.instance_public_ip)
+        # #We want the ip address of this instance
+        # output = cdk.CfnOutput(self, 'CCFP-minecraft-output', value=instance.instance_public_ip)
+
+        #####################BAD#######################
 
         # #EC2 spot fleet instance
         # spot_price = "0.04"

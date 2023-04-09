@@ -1,10 +1,13 @@
 [Unit]
 Description=Minecraft Service
 After=network.target
+
 [Service]
 Type=simple
 User=ec2-user
 Nice=1
+Restart=on-failure
+RestartSec=10
 KillMode=none
 SuccessExitStatus=0 1
 ProtectHome=true
@@ -14,3 +17,6 @@ NoNewPrivileges=true
 WorkingDirectory=/minecraft
 ExecStart=/minecraft/run.sh --nogui
 ExecStop=/usr/bin/pkill -f "java"
+
+[Install]
+WantedBy=multi-user.target
