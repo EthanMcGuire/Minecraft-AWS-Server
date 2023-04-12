@@ -12,12 +12,14 @@ import aws_cdk as cdk
 from constructs import Construct
 
 USER_DATA_FILE = "initialize.sh"
-myIp = '129.63.248.32/32'
 
 class MinecraftServerStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        myIp = cdk.CfnParameter(self, "myIp", type="String",
+            description="The IP address of the admin. Used to limit SSH access to the EC2 server.")
 
         #Server files bucket
         bucket = s3.Bucket(self, "CCFP-minecraft-server-3/29/2023", versioned=True)
@@ -89,7 +91,7 @@ class MinecraftServerStack(Stack):
         securityGroup = ec2.SecurityGroup(self,'CCFP-minecraft-sg', vpc=defaultVpc, allow_all_outbound=True, security_group_name='CCFP-minecraft-sg')
 
         #Allow inbound traffic on specific ports
-        securityGroup.add_ingress_rule(ec2.Peer.ipv4(myIp), ec2.Port.tcp(22), description='Allows SSH access for Admin')  #Only allow SSH to myself
+        securityGroup.add_ingress_rule(ec2.Peer.ipv4(myIp.value_as_string + '/32'), ec2.Port.tcp(22), description='Allows SSH access for Admin')  #Only allow SSH to myself
         securityGroup.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.tcp(25565), description='Allows minecraft access')
         securityGroup.add_ingress_rule(ec2.Peer.any_ipv4(), ec2.Port.udp(25565), description='Allows minecraft access')
 

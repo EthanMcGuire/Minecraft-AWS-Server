@@ -2,8 +2,8 @@
  Minecraft server hosted through AWS.
 
  To create AWS resources on a terminal do:
-    CDK synth
-    CDK deploy
+    CDK synth --parameters myIp={insert-admin-ip}
+    CDK deploy --parameters myIp={insert-admin-ip}
 
 --profile name might be required after each command
 
@@ -45,5 +45,5 @@ Once all this is done, you can deploy.
 HOW TO RUN:
     On command line:
         CDK ls      #This lists all stacks in your project (Just a test to make sure its working)
-        CDK Synth   #Only needs to be done once (Per directory I think? So might not even need to)
-        CDK Deploy
+        CDK Synth --parameters myIp={insert-admin-ip} #Only needs to be done once (Per directory I think? So might not even need to)
+        CDK Deploy --parameters myIp={insert-admin-ip}
