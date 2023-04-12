@@ -4,7 +4,13 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_s3_deployment as s3_deployment,
     aws_iam as iam,
-    aws_ec2 as ec2
+    aws_ec2 as ec2,
+    aws_lambda as _lambda,
+    aws_events as events,
+    aws_events_targets as targets,
+    aws_cloudwatch as cloudwatch,
+    aws_sns as sns,
+    aws_sns_subscriptions as subs,
 )
 
 import aws_cdk as cdk
@@ -65,22 +71,6 @@ class MinecraftServerStack(Stack):
         #Profile for the EC2 role
         instance_profile = iam.CfnInstanceProfile(self, "CCFP-minecraft-instance-profile", roles=[ec2Role.role_name])
 
-        #Create the spot pricing role for the EC2 instance
-        spot_fleet_role = iam.Role(
-            self, "CCFP-minecraft-SpotFleetRole",
-            assumed_by=iam.ServicePrincipal('spotfleet.amazonaws.com'),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AmazonEC2SpotFleetTaggingRole'),
-                iam.ManagedPolicy.from_aws_managed_policy_name('AmazonSSMManagedInstanceCore')
-            ]
-        )
-
-        #Grant additional permissions as needed
-        spot_fleet_role.add_to_policy(iam.PolicyStatement(
-            actions=["ec2:*"],
-            resources=["*"]
-        ))
-
         ###Creating the EC2 instance
 
         #VPC
@@ -103,7 +93,6 @@ class MinecraftServerStack(Stack):
         user_data = ec2.UserData.for_linux()
         user_data.add_commands(user_data_script)
 
-        #OG EC2
         #EC2 instance
         instance = ec2.Instance(self, 'CCFP-minecraft-ec2-instance', vpc= defaultVpc, role=ec2Role, security_group=securityGroup, instance_name='CCFP-minecraft-ec2-instance',\
                                 instance_type=ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MEDIUM), machine_image=ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX_2),\
@@ -125,54 +114,40 @@ class MinecraftServerStack(Stack):
             allocation_id=eIp.attr_allocation_id,
         )
 
-        #####################BAD#######################
+        # ### Cloudwatch Backups
+        # # Create the IAM role for Lambda function
+        # lambda_role = iam.Role(self, "CCFP-minecraft-LambdaBackupRole",
+        #                        assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'),
+        #                        managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole')])
 
-        # #EC2 spot fleet instance
-        # spot_price = "0.04"
+        # # Allow the Lambda function to put objects into the S3 bucket
+        # bucket.grant_put(lambda_role)
 
-        # instance = ec2.CfnSpotFleet(
-        #     self, "CCFP-minecraft-SpotFleet",
-        #     spot_fleet_request_config_data={
-        #         "iamFleetRole": spot_fleet_role.role_arn,
-        #         "targetCapacity": 1,
-        #         "launchSpecifications": [
-        #             {
-        #                 "iamInstanceProfile": {"arn": instance_profile.attr_arn},
-        #                 "instanceType": "t3.medium",
-        #                 "imageId": ec2.MachineImage.latest_amazon_linux(generation=ec2.AmazonLinuxGeneration.AMAZON_LINUX_2).get_image(self).image_id,
-        #                 "keyName": "CCFP-minecraft-key",
-        #                 "spotPrice": spot_price,
-        #                 "UserData": user_data,
-        #                 "networkInterfaces":
-        #                 [
-        #                     {
-        #                         "associatePublicIpAddress": True,
-        #                         "deviceIndex": 0,
-        #                         "subnetId": defaultVpc.public_subnets[0].subnet_id,
-        #                         "groups": [securityGroup.security_group_id],
-        #                     },
-        #                 ],
-        #                 "TagSpecifications":
-        #                 [
-        #                     {
-        #                         "ResourceType": "instance",
-        #                         "Tags": [
-        #                         {
-        #                             "Key": "CCFP-minecraft-ec2-tag",
-        #                             "Value": "CCFP-minecraft-ec2-instance"
-        #                         }
-        #                         ]
-        #                     }
-        #                 ],
-        #             },
-        #         ],
-        #     },
-        # )
+        # # Create the Lambda function
+        # backup_lambda = _lambda.Function(self, "CCFP-minecraft-LambdaBackup",
+        #                                   runtime=_lambda.Runtime.PYTHON_3_8,
+        #                                   handler="lambda_function.lambda_handler",
+        #                                   code=_lambda.Code.asset("./lambda"),
+        #                                   role=lambda_role)
 
-        # client = boto3.client('ec2')
+        # # Set the EC2 instance ID as an environment variable for the Lambda function
+        # backup_lambda.add_environment("INSTANCE_ID", instance.instance_id)
 
-        # response = client.describe_instances(Filters=[  {    'Name': 'tag:CCFP-minecraft-ec2-tag',    'Values': ['CCFP-minecraft-ec2-instance']}])
+        # # Create the CloudWatch rule to trigger the Lambda function every 5 minutes
+        # backup_rule = events.Rule(self, "CCFP-minecraft-BackupRule",
+        #                            schedule=events.Schedule.cron(minute="*/5"),
+        #                            targets=[targets.LambdaFunction(handler=backup_lambda)])
 
-        # ip_address = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
+        # # Create the CloudWatch alarm to monitor the S3 bucket for failures
+        # backup_alarm = cloudwatch.Alarm(self, "CCFP-minecraft-BackupAlarm",
+        #                                 metric=bucket.metric_all_objects(),
+        #                                 evaluation_periods=1,
+        #                                 threshold=0,
+        #                                 alarm_description="No objects have been added to the backup bucket in the last 5 minutes.",
+        #                                 alarm_name="CCFP-minecraft-BackupAlarm")
 
-        # print(ip_address)
+        # # Add the alarm action to the CloudWatch rule
+        # backup_alarm.add_alarm_action(subs.SnsAction(backup_notification_topic)
+                                      
+        # # Grant permission to the EC2 instance to write to the S3 bucket
+        # bucket.grant_write(instance.role)
