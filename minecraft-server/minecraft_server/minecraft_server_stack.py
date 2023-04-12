@@ -12,31 +12,6 @@ import aws_cdk as cdk
 from constructs import Construct
 
 USER_DATA_FILE = "initialize.sh"
-
-bucket_name = "minecraftserverstack-ccfpminecraftserver329202397-120m63ljzb68g"
-bucket_policy = {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": ["s3:ListBucket"],
-            "Resource": [f"arn:aws:s3:::{bucket_name}"]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:ListBucket",
-                "s3:GetObject",
-                "s3:GetBucketLocation",
-                "s3:PutObject",
-                "s3:PutObjectAcl",
-                "s3:DeleteObject"
-            ],
-            "Resource": [f"arn:aws:s3:::{bucket_name}/*"]
-        }
-    ]
-}
-
 myIp = '129.63.248.32/32'
 
 class MinecraftServerStack(Stack):
@@ -52,6 +27,29 @@ class MinecraftServerStack(Stack):
             destination_bucket=bucket)
 
         #Create the EC2 policy to access the bucket
+        bucket_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": ["s3:ListBucket"],
+                    "Resource": [f"arn:aws:s3:::{bucket.bucket_name}"]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:ListBucket",
+                        "s3:GetObject",
+                        "s3:GetBucketLocation",
+                        "s3:PutObject",
+                        "s3:PutObjectAcl",
+                        "s3:DeleteObject"
+                    ],
+                    "Resource": [f"arn:aws:s3:::{bucket.bucket_name}/*"]
+                }
+            ]
+        }
+
         policy_document = iam.PolicyDocument.from_json(bucket_policy)
 
         new_policy = iam.Policy(self, "CCFP-minecraft-s3-policy",
@@ -98,6 +96,7 @@ class MinecraftServerStack(Stack):
         #User data script
         with open(USER_DATA_FILE, "r") as f:
             user_data_script = f.read()
+        user_data_script = user_data_script.replace('${S3_BUCKET_NAME}', bucket.bucket_name)
 
         user_data = ec2.UserData.for_linux()
         user_data.add_commands(user_data_script)
