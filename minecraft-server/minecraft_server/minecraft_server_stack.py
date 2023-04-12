@@ -112,6 +112,19 @@ class MinecraftServerStack(Stack):
         #We want the ip address of this instance
         output = cdk.CfnOutput(self, 'CCFP-minecraft-output', value=instance.instance_public_ip)
 
+        #Create an elastic IP address (EIP)
+        eIp = ec2.CfnEIP(
+            self, "CCFP-minecraft-EIP",
+            domain="vpc",
+        )
+
+        #Associate the EIP with the server EC2 instance
+        eIpAssoc = ec2.CfnEIPAssociation(
+            self, "CCFP-minecraft-EIP-Assoc",
+            instance_id=instance.instance_id,
+            allocation_id=eIp.attr_allocation_id,
+        )
+
         #####################BAD#######################
 
         # #EC2 spot fleet instance
