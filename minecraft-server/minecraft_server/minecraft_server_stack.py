@@ -114,29 +114,35 @@ class MinecraftServerStack(Stack):
             allocation_id=eIp.attr_allocation_id,
         )
 
-        # ### Cloudwatch Backups
-        # # Create the IAM role for Lambda function
-        # lambda_role = iam.Role(self, "CCFP-minecraft-LambdaBackupRole",
-        #                        assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'),
-        #                        managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole')])
+        ### Cloudwatch Backups
+        # Create the IAM role for Lambda function
+        lambda_role = iam.Role(self, "CCFP-minecraft-LambdaBackupRole",
+                               assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'),
+                               managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole')])
 
-        # # Allow the Lambda function to put objects into the S3 bucket
-        # bucket.grant_put(lambda_role)
+        # Allow the Lambda function to put objects into the S3 bucket
+        bucket.grant_put(lambda_role)
 
-        # # Create the Lambda function
-        # backup_lambda = _lambda.Function(self, "CCFP-minecraft-LambdaBackup",
-        #                                   runtime=_lambda.Runtime.PYTHON_3_8,
-        #                                   handler="lambda_function.lambda_handler",
-        #                                   code=_lambda.Code.asset("./lambda"),
-        #                                   role=lambda_role)
+        # Grant permission to the EC2 instance to write to the S3 bucket
+        bucket.grant_write(instance.role)
 
-        # # Set the EC2 instance ID as an environment variable for the Lambda function
-        # backup_lambda.add_environment("INSTANCE_ID", instance.instance_id)
+        # Create the Lambda function
+        backup_lambda = _lambda.Function(self, "CCFP-minecraft-LambdaBackup",
+                                          runtime=_lambda.Runtime.PYTHON_3_8,
+                                          handler="lambda.lambda_handler",
+                                          code=_lambda.Code.asset("./lambda"),
+                                          role=lambda_role,
+                                          environment = {
+                                            'INSTANCE_ID': instance.instance_id,
+                                            'BUCKET_NAME': bucket.bucket_name
+                                          })
 
-        # # Create the CloudWatch rule to trigger the Lambda function every 5 minutes
-        # backup_rule = events.Rule(self, "CCFP-minecraft-BackupRule",
-        #                            schedule=events.Schedule.cron(minute="*/5"),
-        #                            targets=[targets.LambdaFunction(handler=backup_lambda)])
+        # Create the CloudWatch rule to trigger the Lambda function every 5 minutes
+        backup_rule = events.Rule(self, "CCFP-minecraft-BackupRule",
+                                   schedule=events.Schedule.cron(minute="*/5"),
+                                   targets=[targets.LambdaFunction(handler=backup_lambda)])
+
+        #Do this later
 
         # # Create the CloudWatch alarm to monitor the S3 bucket for failures
         # backup_alarm = cloudwatch.Alarm(self, "CCFP-minecraft-BackupAlarm",
@@ -148,6 +154,3 @@ class MinecraftServerStack(Stack):
 
         # # Add the alarm action to the CloudWatch rule
         # backup_alarm.add_alarm_action(subs.SnsAction(backup_notification_topic)
-                                      
-        # # Grant permission to the EC2 instance to write to the S3 bucket
-        # bucket.grant_write(instance.role)
