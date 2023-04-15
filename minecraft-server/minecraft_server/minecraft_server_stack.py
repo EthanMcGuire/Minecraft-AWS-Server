@@ -10,7 +10,7 @@ from aws_cdk import (
     aws_events_targets as targets,
     aws_cloudwatch as cloudwatch,
     aws_sns as sns,
-    aws_sns_subscriptions as subs,
+    aws_sns_subscriptions as subs
 )
 
 import aws_cdk as cdk
@@ -115,10 +115,46 @@ class MinecraftServerStack(Stack):
         )
 
         ### Cloudwatch Backups
-        # Create the IAM role for Lambda function
-        lambda_role = iam.Role(self, "CCFP-minecraft-LambdaBackupRole",
-                               assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'),
-                               managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole')])
+
+        # Create the IAM policy and role for the Lambda function
+
+        # Create the lambda policy
+        lambda_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "logs:*"
+                    ],
+                    "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": "s3:PutObject",
+                    "Resource": [f"arn:aws:s3:::{bucket.bucket_name}/*"]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "ec2:Describe*",
+                        "ssm:SendCommand",
+                        "ssm:GetCommandInvocation"
+                    ],
+                    "Resource": "*"
+                }
+            ]
+        }
+
+        policy_document = iam.PolicyDocument.from_json(lambda_policy)
+
+        lambda_policy = iam.Policy(self, "CCFP-minecraft-lambda-policy",
+                                document=policy_document)
+
+        # Lambda role        
+        lambda_role = iam.Role(self,"CCFP-minecraft-LambdaBackupRole", assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'))
+
+        lambda_role.attach_inline_policy(lambda_policy)
 
         # Allow the Lambda function to put objects into the S3 bucket
         bucket.grant_put(lambda_role)
@@ -129,8 +165,8 @@ class MinecraftServerStack(Stack):
         # Create the Lambda function
         backup_lambda = _lambda.Function(self, "CCFP-minecraft-LambdaBackup",
                                           runtime=_lambda.Runtime.PYTHON_3_8,
-                                          handler="lambda.lambda_handler",
-                                          code=_lambda.Code.asset("./lambda"),
+                                          handler="lambda_function.lambda_handler",
+                                          code=_lambda.Code.from_asset('lambda'),
                                           role=lambda_role,
                                           environment = {
                                             'INSTANCE_ID': instance.instance_id,

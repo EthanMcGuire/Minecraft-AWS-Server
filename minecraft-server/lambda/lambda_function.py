@@ -8,7 +8,7 @@ def lambda_handler(event, context):
 
     # Use the EC2 SSM to run a command to zip the minecraft/saves directory
     ssm_client = boto3.client('ssm')
-    ssm_command = f"cd /minecraft && zip -r saves.zip saves"
+    ssm_command = f"zip -r saves.zip minecraft/saves"
 
     # Send the command
     ssm_response = ssm_client.send_command(
