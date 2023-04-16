@@ -1,6 +1,7 @@
 #!/usr/bin/env/ bash
 sudo yum install mysql -y
 sudo yum update
+sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
 sudo mkdir /minecraft
 sudo chown -R ec2-user:ec2-user /minecraft
 wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/java/19/latest/jdk-19_linux-x64_bin.rpm

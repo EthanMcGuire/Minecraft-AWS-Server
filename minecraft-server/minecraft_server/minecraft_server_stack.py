@@ -34,7 +34,7 @@ class MinecraftServerStack(Stack):
             sources=[s3_deployment.Source.asset("./server-files")],
             destination_bucket=bucket)
 
-        #Create the EC2 policy to access the bucket
+        #Create the EC2 policy to access the bucket, and update SSM information
         bucket_policy = {
             "Version": "2012-10-17",
             "Statement": [
@@ -54,6 +54,11 @@ class MinecraftServerStack(Stack):
                         "s3:DeleteObject"
                     ],
                     "Resource": [f"arn:aws:s3:::{bucket.bucket_name}/*"]
+                },
+                {
+                    "Effect": "Allow",
+                    "Action": "ssm:UpdateInstanceInformation",
+                    "Resource": "*"
                 }
             ]
         }
@@ -64,7 +69,10 @@ class MinecraftServerStack(Stack):
                     document=policy_document)
 
         #EC2 role which will hold this policy
+        #Use managed polcies to add SSM policies
         ec2Role = iam.Role(self,'CCFP-minecraft-s3-role', assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'))
+        
+        ec2Role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore"))
 
         ec2Role.attach_inline_policy(new_policy)
 
@@ -168,6 +176,7 @@ class MinecraftServerStack(Stack):
                                           handler="lambda_function.lambda_handler",
                                           code=_lambda.Code.from_asset('lambda'),
                                           role=lambda_role,
+                                          timeout=cdk.Duration.seconds(30),
                                           environment = {
                                             'INSTANCE_ID': instance.instance_id,
                                             'BUCKET_NAME': bucket.bucket_name
