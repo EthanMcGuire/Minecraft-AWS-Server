@@ -15,7 +15,7 @@ ProtectSystem=full
 PrivateDevices=true
 NoNewPrivileges=true
 WorkingDirectory=/minecraft
-ExecStart=/minecraft/run.sh --nogui
+ExecStart=/usr/bin/java -Xmx3G -Xms2G -jar /minecraft/server.jar --nogui
 ExecStop=/usr/bin/pkill -f "java"
 
 [Install]

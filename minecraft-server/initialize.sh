@@ -7,10 +7,10 @@ sudo chown -R ec2-user:ec2-user /minecraft
 wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/java/19/latest/jdk-19_linux-x64_bin.rpm
 sudo rpm -Uvh jdk-19_linux-x64_bin.rpm
 cd /minecraft
-aws s3 cp s3://${S3_BUCKET_NAME}/forge-1.19.3-44.1.0-installer.jar .
-sudo java -jar forge-1.19.3-44.1.0-installer.jar --installServer
-echo '#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).
-#Sun Apr 02 15:11:12 EDT 2023
+aws s3 cp s3://${S3_BUCKET_NAME}/server.jar .
+sudo java -jar server.jar --nogui
+echo '#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://aka.ms/MinecraftEULA).
+#Sun Apr 16 11:02:06 EDT 2023
 eula=true
 ' > eula.txt
 sudo aws s3 cp s3://${S3_BUCKET_NAME}/server.properties .
