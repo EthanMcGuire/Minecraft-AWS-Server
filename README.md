@@ -17,9 +17,13 @@ The provided IP address is used to limit SSH access to the EC2 instance which ru
 Many boilerplate files are created during CDK project initialization. Here is a listing of the files which we've written or placed that are relevant to project.
 
 `minecraft-server/app.py` - Initializes the application and the single stack deployed by our project.
+
 `minecraft-server/minecraft-server/minecraft_server_stack.py` - The majority of the project lives here. Defines all of the resources (EC2, Lambdas, S3, Policies, Roles, etc.) used.
+
 `minecraft-server/lambda/*` - The source code for all of our Lambda functions.
+
 `minecraft-server/server-files/*` - Files initially placed into our S3 Bucket. They are used to initialize the server on the EC2 instance.
+
 `minecraft-server/initialize.sh` - The user-data script for our EC2 instance. Installs the necessary software and downloads relevant files from the S3 Bucket.
 
 ## Information for First Time Users
