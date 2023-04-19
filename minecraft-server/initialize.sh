@@ -13,7 +13,6 @@ echo '#By changing the setting below to TRUE you are indicating your agreement t
 eula=true
 ' > eula.txt
 sudo aws s3 cp s3://${S3_BUCKET_NAME}/server.properties .
-sudo aws s3 cp s3://${S3_BUCKET_NAME}/user_jvm_args.txt .
 sudo aws s3 cp s3://${S3_BUCKET_NAME}/minecraft.service /etc/systemd/system
 sudo chown -R ec2-user:ec2-user /minecraft
 sudo systemctl daemon-reload
