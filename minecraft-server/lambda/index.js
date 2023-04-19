@@ -25,7 +25,7 @@ exports.handler = async (event) => {
             <title>Minecraft Server Control</title>
           </head>
           <body>
-            <h1>Mincraft Server Status</h1>
+            <h1>Minecraft Server Status</h1>
               <p>Server State: ${state}</p>
               ${
                 state === 'stopped'
