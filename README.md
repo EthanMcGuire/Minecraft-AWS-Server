@@ -1,49 +1,56 @@
 # Minecraft-AWS-Server
- Minecraft server hosted through AWS.
+Minecraft server hosted through AWS. Created by Mason Charette, Raymond Fanini, Ethan McGuire, and Sahil Patel for COMP.4600 - Cloud Computing at UMass Lowell.
 
- To create AWS resources on a terminal do:
-    CDK synth --parameters myIp={insert-admin-ip}
-    CDK deploy --parameters myIp={insert-admin-ip}
+## Usage
+To run the Cloud Development Kit (CDK) code and deploy the AWS stack for this project, run the following on your terminal.
+```
+cdk synth --parameters myIp={insert-admin-ip}
 
---profile name might be required after each command
+cdk deploy --parameters myIp={insert-admin-ip}
+```
 
-Synth synthesizes the resources
-Deploy deploys the resources to AWS
+Synth creates a CloudFormation template for the project, while deploy actually create the resources on AWS.
 
-Resources are defined in final_project_stack.py
+The provided IP address is used to limit SSH access to the EC2 instance which runs the server. In particular, only devices from that IP are allowed to SSH into the server.
 
-SOME USEFUL CDK INFORMATION FOR STARTING:
-    https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html
+## Relevant Files
+Many boilerplate files are created during CDK project initialization. Here is a listing of the files which we've written or placed that are relevant to project.
 
-SET AWS USER INFORMATION:
-    In app.py, change the account you are running on:
-        MinecraftServerStack(app, "MinecraftServerStack", env=cdk.Environment(account='352387159701', region='us-east-1'))
-        -The account ID and region should be those of your AWS account
+`minecraft-server/app.py` - Initializes the application and the single stack deployed by our project.
+`minecraft-server/minecraft-server/minecraft_server_stack.py` - The majority of the project lives here. Defines all of the resources (EC2, Lambdas, S3, Policies, Roles, etc.) used.
+`minecraft-server/lambda/*` - The source code for all of our Lambda functions.
+`minecraft-server/server-files/*` - Files initially placed into our S3 Bucket. They are used to initialize the server on the EC2 instance.
+`minecraft-server/initialize.sh` - The user-data script for our EC2 instance. Installs the necessary software and downloads relevant files from the S3 Bucket.
 
-    Your command line or visual studio AWS account should also be configured with the proper keys and credentials.
+## Information for First Time Users
+If you've never used the CDK before, check out this link.
+https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html
 
-SSH:
-    In minecraft_server_stack.py the IP for being able to SSH into the EC2 instance should be changed if you want that access. If you upload the server on your account, this can also
-    be changed in the EC2's security group on AWS -> EC2 instances.
+Your command line or Visual Studio AWS account should also be configured with the proper keys and credentials.
 
+Here are some prerequisites to the CDK and our project.
+```
 INSTALLATION:
     https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 
-    FIRST:
-        Install Node.js
-        Then install NPM: npm install -g npm
+FIRST:
+    Install Node.js
+    Then install NPM: npm install -g npm
 
-    NEXT:
-        npm install -g npm
+NEXT:
+    npm install -g npm
 
-    FINALLY:
-        #Do this in the project directory
-        python -m pip install -r requirements.txt   #This will install the requirements of the CDK project
+FINALLY:
+    #Do this in the project directory
+    #This will install the requirements of the CDK project
+    python -m pip install -r requirements.txt
+```
 
-Once all this is done, you can deploy.
+Once all this is done, you can deploy our CDK code.
+```
+cdk ls #This lists all stacks in your project (Just a test to make sure its working)
 
-HOW TO RUN:
-    On command line:
-        CDK ls      #This lists all stacks in your project (Just a test to make sure its working)
-        CDK Synth --parameters myIp={insert-admin-ip} #Only needs to be done once (Per directory I think? So might not even need to)
-        CDK Deploy --parameters myIp={insert-admin-ip}
+cdk Synth --parameters myIp={insert-admin-ip} #Generates a CloudFormation template
+
+cdk Deploy --parameters myIp={insert-admin-ip}
+```
